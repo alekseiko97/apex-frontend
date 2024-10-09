@@ -10,6 +10,8 @@ interface Category {
     is_active: boolean;
     created_at: string;
     products_count: number;
+    parent_category?: Category | null;
+    subcategories?: Category[]
 }
 
 const CategoryTable = () => {
@@ -20,6 +22,7 @@ const CategoryTable = () => {
     const [filterStatus, setFilterStatus] = useState<string>(''); // For status filter
     const [sortConfig, setSortConfig] = useState<{ key: keyof Category; direction: 'asc' | 'desc' } | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [expandedCategories, setExpandedCategories] = useState<string[]>([]); // Track expanded categories
     const pageSize = 10;
 
     useEffect(() => {
@@ -48,10 +51,18 @@ const CategoryTable = () => {
     const sortedCategories = () => {
         if (sortConfig !== null) {
             return [...categories].sort((a, b) => {
-                if (a[sortConfig.key] < b[sortConfig.key]) {
+                const aValue = a[sortConfig.key];
+                const bValue = b[sortConfig.key];
+
+                // Ensure that both values exist before comparing
+                if (aValue == null || bValue == null) {
+                    return 0; // Treat undefined or null values as equal
+                }
+
+                if (aValue < bValue) {
                     return sortConfig.direction === 'asc' ? -1 : 1;
                 }
-                if (a[sortConfig.key] > b[sortConfig.key]) {
+                if (aValue > bValue) {
                     return sortConfig.direction === 'asc' ? 1 : -1;
                 }
                 return 0;
@@ -59,6 +70,7 @@ const CategoryTable = () => {
         }
         return categories;
     };
+
 
     const filteredCategories = () => {
         return sortedCategories().filter((category) => {
@@ -75,6 +87,65 @@ const CategoryTable = () => {
     };
 
     const totalPages = Math.ceil(filteredCategories().length / pageSize);
+
+    const toggleCategory = (uniqueCategoryKey: string) => {
+        setExpandedCategories((prevExpanded) =>
+            prevExpanded.includes(uniqueCategoryKey)
+                ? prevExpanded.filter((key) => key !== uniqueCategoryKey)
+                : [...prevExpanded, uniqueCategoryKey]
+        );
+    };
+
+    // Helper to generate a unique key for the category based on its position in the tree
+    const getUniqueCategoryKey = (categoryId: number, parentCategoryId: number | null): string => {
+        return `${parentCategoryId || 'root'}-${categoryId}`;
+    };
+
+    const renderCategoryRow = (category: Category, level: number = 0, parentCategoryId: number | null = null): JSX.Element[] | JSX.Element | null => {
+        const uniqueCategoryKey = getUniqueCategoryKey(category.id, parentCategoryId);
+
+        console.log(uniqueCategoryKey);
+
+        const isExpanded = expandedCategories.includes(uniqueCategoryKey);
+
+        // Only show the button if the category has subcategories
+        const hasSubcategories = category.subcategories && category.subcategories.length > 0;
+
+        return (
+            <>
+                <tr key={uniqueCategoryKey} className={`border-t ${level > 0 ? 'bg-gray-100' : ''}`}>
+                    <td className="p-3">
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginLeft: `${level * 20 + (hasSubcategories ? 0 : 30)}px`, // Add more margin if there's no button
+                            }}
+                        >
+                            {hasSubcategories && (
+                                <button
+                                    onClick={() => toggleCategory(uniqueCategoryKey)}
+                                    className="mr-2 inline-flex items-center justify-center w-6 h-6 text-white bg-blue-500 rounded-full focus:outline-none"
+                                >
+                                    {isExpanded ? '-' : '+'}
+                                </button>
+                            )}
+                            <span>{category.name}</span>
+                        </div>
+                    </td>
+                    <td className="p-3">{category.is_active ? 'Active' : 'Inactive'}</td>
+                    <td className="p-3">{category.products_count ?? 0}</td>
+                    <td className="p-3">{new Date(category.created_at).toLocaleDateString()}</td>
+                </tr>
+
+                {/* If the category is expanded, render its subcategories recursively */}
+                {isExpanded && category.subcategories && category.subcategories.map((subcategory) => (
+                    renderCategoryRow(subcategory, level + 1, category.id)
+                ))}
+            </>
+        );
+    };
+
 
     if (loading) {
         return <p>Loading...</p>;
@@ -114,19 +185,12 @@ const CategoryTable = () => {
                     <tr>
                         <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('name')}>Name</th>
                         <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('is_active')}>Status</th>
-                        <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('products_count')}>Products</th>
+                        <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('products_count')}>Product count</th>
                         <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('created_at')}>Created At</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {paginatedCategories().map((category) => (
-                        <tr key={category.id} className="border-t">
-                            <td className="p-3">{category.name}</td>
-                            <td className="p-3">{category.is_active ? 'Active' : 'Inactive'}</td>
-                            <td className="p-3">{category.products_count}</td>
-                            <td className="p-3">{new Date(category.created_at).toLocaleDateString()}</td>
-                        </tr>
-                    ))}
+                    {paginatedCategories().map((category) => renderCategoryRow(category))}
                 </tbody>
             </table>
 

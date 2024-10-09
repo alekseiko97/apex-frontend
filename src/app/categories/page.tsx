@@ -2,6 +2,7 @@
 
 import CategoryTable from "@/components/CategoryTable";
 
+
 const CategoriesPage = () => {
     return (
         <div className="container mx-auto p-8">
