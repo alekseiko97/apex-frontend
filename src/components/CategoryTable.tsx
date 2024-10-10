@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchCategories } from '@/services/api';
+import Link from 'next/link';
 
 interface Category {
     id: number;
@@ -130,7 +131,9 @@ const CategoryTable = () => {
                                     {isExpanded ? '-' : '+'}
                                 </button>
                             )}
-                            <span>{category.name}</span>
+                            <Link href={`/categories/${category.id}`}>
+                                {category.name}
+                            </Link>
                         </div>
                     </td>
                     <td className="p-3">{category.is_active ? 'Active' : 'Inactive'}</td>

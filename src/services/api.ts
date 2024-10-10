@@ -30,6 +30,32 @@ export async function login(username: string, password: string) {
     }
 }
 
+export const fetchCategoryDetails = async (id: string) => {
+    const sessionToken = localStorage.getItem('sessionToken');
+
+    if (!sessionToken) {
+        throw new Error('Session token is missing. Please login.');
+    }
+
+    const response = await fetch('http://127.0.0.1:8000/api/categories/' + id, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionToken}`,
+        },
+    });
+
+    if (!response.ok) {
+        if (response.status === 401) {
+            // Handle unauthorized, possibly redirect to login
+            throw new Error('Unauthorized. Please login again.');
+        }
+        throw new Error(`Error fetching categories.\nHTTP status: ${response.status}`);
+    }
+
+    return await response.json();
+};
+
 export const fetchCategories = async () => {
     const sessionToken = localStorage.getItem('sessionToken');
 
