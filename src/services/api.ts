@@ -56,6 +56,28 @@ export const fetchCategoryDetails = async (id: string) => {
     return await response.json();
 };
 
+export async function createCategory(categoryData: {
+    name: string;
+    description: string;
+    is_active: boolean;
+    parent_category: number | null;
+}) {
+    const response = await fetch('http://127.0.0.1:8000/api/categories/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('sessionToken')}`,
+        },
+        body: JSON.stringify(categoryData),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to create category');
+    }
+
+    return await response.json();
+}
+
 export const updateCategory = async (id: string, updatedData: any) => {
     const response = await fetch(`http://127.0.0.1:8000/api/categories/${id}/`, {
         method: 'PATCH',
