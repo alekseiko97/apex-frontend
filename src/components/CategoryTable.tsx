@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { fetchCategories } from '@/services/api';
 import Link from 'next/link';
 
@@ -16,6 +17,7 @@ interface Category {
 }
 
 const CategoryTable = () => {
+    const router = useRouter();
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -105,8 +107,6 @@ const CategoryTable = () => {
     const renderCategoryRow = (category: Category, level: number = 0, parentCategoryId: number | null = null): JSX.Element[] | JSX.Element | null => {
         const uniqueCategoryKey = getUniqueCategoryKey(category.id, parentCategoryId);
 
-        console.log(uniqueCategoryKey);
-
         const isExpanded = expandedCategories.includes(uniqueCategoryKey);
 
         // Only show the button if the category has subcategories
@@ -139,6 +139,11 @@ const CategoryTable = () => {
                     <td className="p-3">{category.is_active ? 'Active' : 'Inactive'}</td>
                     <td className="p-3">{category.products_count ?? 0}</td>
                     <td className="p-3">{new Date(category.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button onClick={() => router.push(`/categories/edit/${category.id}`)}>
+                            Edit
+                        </button>
+                    </td>
                 </tr>
 
                 {/* If the category is expanded, render its subcategories recursively */}

@@ -48,12 +48,7 @@ const CategoryDetailPage = () => {
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>{error}</p>;
-
-    console.log("sku: " + category?.products[0].sku);
-    console.log("ean: " + category?.products[0].ean);
-    console.log("url: " + category?.products[0].url);
-    console.log("name: " + category?.products[0].name);
-
+    
     return (
         <div className="container mx-auto p-8">
             {category && (
