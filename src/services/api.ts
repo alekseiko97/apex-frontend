@@ -78,6 +78,22 @@ export async function createCategory(categoryData: {
     return await response.json();
 }
 
+export async function deleteCategory(categoryId: number) {
+    const response = await fetch(`http://127.0.0.1:8000/api/categories/${categoryId}/`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('sessionToken')}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error deleting category. Status: ${response.status}`);
+    }
+
+    return response.status;
+}
+
 export const updateCategory = async (id: string, updatedData: any) => {
     const response = await fetch(`http://127.0.0.1:8000/api/categories/${id}/`, {
         method: 'PATCH',

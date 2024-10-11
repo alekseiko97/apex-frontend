@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchCategories } from '@/services/api';
+import { fetchCategories, deleteCategory } from '@/services/api';
 import Link from 'next/link';
 
 interface Category {
@@ -26,22 +26,35 @@ const CategoryTable = () => {
     const [sortConfig, setSortConfig] = useState<{ key: keyof Category; direction: 'asc' | 'desc' } | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [expandedCategories, setExpandedCategories] = useState<string[]>([]); // Track expanded categories
+    const [showDialog, setShowDialog] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
+
     const pageSize = 10;
 
-    useEffect(() => {
-        const loadCategories = async () => {
-            try {
-                const data = await fetchCategories();
-                setCategories(data);
-                setLoading(false);
-            } catch (error) {
-                setError('Error fetching categories');
-                setLoading(false);
-            }
-        };
+    const refreshCategories = async () => {
+        try {
+            const data = await fetchCategories();
+            setCategories(data);
+            setLoading(false);
+        } catch (error) {
+            setError('Error fetching categories');
+            setLoading(false);
+        }
+    };
 
-        loadCategories();
+    useEffect(() => {
+        refreshCategories();
     }, []);
+
+    const openDialog = (categoryId: number) => {
+        setCategoryToDelete(categoryId);
+        setShowDialog(true);
+    };
+
+    const closeDialog = () => {
+        setCategoryToDelete(null);
+        setShowDialog(false);
+    };
 
     const handleSort = (key: keyof Category) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -74,6 +87,19 @@ const CategoryTable = () => {
         return categories;
     };
 
+    const handleDelete = async (categoryId: number) => {
+        try {
+            const responseStatus = await deleteCategory(categoryId);
+            if (responseStatus === 204) {
+                alert("Category deleted successfully!");
+                closeDialog();
+                refreshCategories(); // Refresh categories after successful deletion
+            }
+        } catch (error) {
+            console.error("Delete failed:", error);
+            alert("Failed to delete category.");
+        }
+    };
 
     const filteredCategories = () => {
         return sortedCategories().filter((category) => {
@@ -140,11 +166,43 @@ const CategoryTable = () => {
                     <td className="p-3">{category.products_count ?? 0}</td>
                     <td className="p-3">{new Date(category.created_at).toLocaleDateString()}</td>
                     <td>
-                        <button onClick={() => router.push(`/categories/edit/${category.id}`)}>
+                        <button
+                            className="mr-2 p-2 bg-blue-500 text-white rounded"
+                            onClick={() => router.push(`/categories/edit/${category.id}`)}>
                             Edit
+                        </button>
+                        <button
+                            className="p-2 bg-red-500 text-white rounded"
+                            onClick={() => openDialog(category.id)}
+                        >
+                            Delete
                         </button>
                     </td>
                 </tr>
+
+                {/* Modal dialog - confirm category delete */}
+                {showDialog && (
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center">
+                        <div className="bg-white p-6 rounded shadow-md">
+                            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+                            <p>Are you sure you want to delete this category?</p>
+                            <div className="flex justify-end mt-6">
+                                <button
+                                    className="mr-2 p-2 bg-gray-300 rounded"
+                                    onClick={closeDialog}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="p-2 bg-red-500 text-white rounded"
+                                    onClick={() => handleDelete(category.id)}
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* If the category is expanded, render its subcategories recursively */}
                 {isExpanded && category.subcategories && category.subcategories.map((subcategory) => (
@@ -153,7 +211,6 @@ const CategoryTable = () => {
             </>
         );
     };
-
 
     if (loading) {
         return <p>Loading...</p>;
