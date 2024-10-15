@@ -35,7 +35,7 @@ export default function RootLayout({
           <Sidebar /> {/* Sidebar on the left */}
           <div className="flex-grow">
             <Header /> {/* Header at the top */}
-            <main className="p-8">{children}</main> {/* Main content area */}
+            <main className="p-0">{children}</main> {/* Main content area */}
           </div>
         </div>
       </body>

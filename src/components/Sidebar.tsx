@@ -15,15 +15,15 @@ const Sidebar = () => {
             <nav className="flex flex-col space-y-4">
                 <button
                     className="p-2 bg-blue-500 text-white rounded"
+                    onClick={() => router.push('/categories')}
+                >
+                    View Categories
+                </button>
+                <button
+                    className="p-2 bg-green-500 text-white rounded"
                     onClick={() => router.push('/categories/create')}
                 >
                     Create Category
-                </button>
-                <button
-                    className="p-2 bg-blue-500 text-white rounded"
-                    onClick={() => router.push('/categories')}
-                >
-                    Show All Categories
                 </button>
                 <button
                     className="p-2 bg-red-500 text-white rounded"
