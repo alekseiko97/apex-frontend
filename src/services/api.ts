@@ -26,7 +26,7 @@ export async function login(username: string, password: string) {
         return data;  // Return the data in case we need it in the app
     } catch (error) {
         console.error('Login error:', error);
-        throw error;  // Re-throw the error to handle it in the calling component
+        throw error; 
     }
 }
 
@@ -128,10 +128,45 @@ export const fetchCategories = async () => {
 
     if (!response.ok) {
         if (response.status === 401) {
-            // Handle unauthorized, possibly redirect to login
             throw new Error('Unauthorized. Please login again.');
         }
         throw new Error(`Error fetching categories.\nHTTP status: ${response.status}`);
+    }
+
+    return await response.json();
+};
+
+export const getCsrfToken = async () => {
+    const response = await fetch('http://127.0.0.1:8000/api/csrf/', {
+        credentials: 'include', // Ensure the cookie is included
+    });
+    
+    const data = await response.json();
+    return data.csrfToken;
+}
+
+export const fetchUser = async () => {
+    const token = localStorage.getItem('sessionToken');
+    //const csrfToken = await getCsrfToken();
+
+    //console.log("csrfToken: " + csrfToken);
+
+    if (!token) {
+        throw new Error('No session token found');
+    }
+
+    const response = await fetch('http://127.0.0.1:8000/api/user/', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    console.log("response: " + response.json());
+
+    if (!response.ok) {
+        throw new Error(`Error fetching user. HTTP status: ${response.status}`);
     }
 
     return await response.json();
