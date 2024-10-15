@@ -1,15 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // For redirecting
-import { createCategory } from "@/services/api"; // Assuming the API service is created
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; 
+import { createCategory } from "@/services/api"; 
 
 const CreateCategoryPage = () => {
     const router = useRouter();
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
     const [isActive, setIsActive] = useState<boolean>(true);
-    const [parentCategory, setParentCategory] = useState<number | null>(null); // If there are parent categories
+    const [parentCategory, setParentCategory] = useState<number | null>(null); // If there are parent 
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        // Check if the user is logged in
+        const token = localStorage.getItem('sessionToken');
+        if (!token) {
+            router.push('/login'); // Redirect to login if not logged in
+        } else {
+            setIsLoggedIn(true);
+        }
+    }, [router]);
+
+    if (!isLoggedIn) {
+        return null; // Don't show anything until logged in check is done
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

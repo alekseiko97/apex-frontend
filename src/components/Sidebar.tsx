@@ -1,12 +1,34 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 const Sidebar = () => {
     const router = useRouter();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    // Function to check if token exists
+    const checkLoginStatus = () => {
+        const token = localStorage.getItem('sessionToken');
+        setIsLoggedIn(!!token); // Set to true if token exists
+    };
+
+    useEffect(() => {
+        checkLoginStatus(); // Check login status when component mounts
+        window.addEventListener('storage', checkLoginStatus); // Listen for storage changes (in case of manual updates)
+
+        return () => {
+            window.removeEventListener('storage', checkLoginStatus); // Clean up listener
+        };
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('sessionToken');
+        setIsLoggedIn(false);
+        router.push('/login');
+    };
+
+    const handleLoginRedirect = () => {
         router.push('/login');
     };
 
@@ -27,13 +49,13 @@ const Sidebar = () => {
                 </button>
                 <button
                     className="p-2 bg-red-500 text-white rounded"
-                    onClick={handleLogout}
+                    onClick={isLoggedIn ? handleLogout : handleLoginRedirect}
                 >
-                    Logout
+                    {isLoggedIn ? 'Logout' : 'Login'}
                 </button>
             </nav>
         </aside>
     );
-}
+};
 
 export default Sidebar;
